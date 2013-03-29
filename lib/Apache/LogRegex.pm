@@ -3,7 +3,7 @@ package Apache::LogRegex;
 use strict;
 use warnings;
 
-our $VERSION = '1.5';
+our $VERSION = '1.6';
 
 sub new {
     my ( $class, $format ) = @_;

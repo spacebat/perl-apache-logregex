@@ -9,7 +9,11 @@ use_ok('Apache::LogRegex');
 
 my $format = '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"';
 my @fields = qw/%h %l %u %t %r %>s %b %{Referer}i %{User-Agent}i/;
-my $regex  = '(?-xism:^(\\S*) (\\S*) (\\S*) (\\[[^\\]]+\\]) (?-xism:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)") (\\S*) (\\S*) (?-xism:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)") (?-xism:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")\s*$)';
+my $regex;
+{
+    my $inner_regex = qr/"([^"\\]*(?:\\.[^"\\]*)*)"/;
+    $regex = qr/^(\S*) (\S*) (\S*) (\[[^\]]+\]) $inner_regex (\S*) (\S*) $inner_regex $inner_regex\s*$/;
+}
 my $line1  = '212.74.15.68 - - [23/Jan/2004:11:36:20 +0000] "GET /images/previous.png HTTP/1.1" 200 2607 "http://peterhi.dyndns.org/bandwidth/index.html" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2) Gecko/20021202"';
 my $line2  = '212.74.15.68 - - [23/Jan/2004:11:36:20 +0000] "GET /images/previous.png=\" HTTP/1.1" 200 2607 "http://peterhi.dyndns.org/bandwidth/index.html" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2) Gecko/20021202"';
 my $line3  = '4.224.234.46 - - [20/Jul/2004:13:18:55 -0700] "GET /core/listing/pl_boat_detail.jsp?&units=Feet&checked_boats=1176818&slim=broker&&hosturl=giffordmarine&&ywo=giffordmarine& HTTP/1.1" 200 2888 "http://search.yahoo.com/bin/search?p=\"grady%20white%20306%20bimini\"" "Mozilla/4.0 (compatible; MSIE 6.0; Windows 98; YPC 3.0.3; yplus 4.0.00d)"';

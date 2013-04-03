@@ -3,8 +3,6 @@ Apache::LogRegex
 
 *Parse a line from an Apache logfile into a hash*
 
-This document refers to version 1.5 of Apache::LogRegex, released November 20th 2008.
-
 Designed as a simple class to parse Apache log files. It will construct a regex that will parse the given log file format and can then parse lines from the log file line by line returning a hash of each line.
 
 The field names of the hash are derived from the log file format. Thus if the format is '%a %t \"%r\" %s %b %T \"%{Referer}i\" ...' then the keys of the hash will be %a, %t, %r, %s, %b, %T and %{Referer}i.

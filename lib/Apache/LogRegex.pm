@@ -3,8 +3,6 @@ package Apache::LogRegex;
 use strict;
 use warnings;
 
-our $VERSION = '1.6';
-
 sub new {
     my ( $class, $format ) = @_;
 
@@ -112,10 +110,6 @@ sub rename_this_name {
 =head1 NAME
 
 Apache::LogRegex - Parse a line from an Apache logfile into a hash
-
-=head1 VERSION
-
-This document refers to version 1.5 of Apache::LogRegex, released November 20th 2008
 
 =head1 SYNOPSIS
 

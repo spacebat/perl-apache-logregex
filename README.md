@@ -14,10 +14,10 @@ Should these key names be unusable, as I guess they probably are, then subclass 
 INSTALLATION
 ------------
 
- % perl Makefile.PL
- % make
- % make test
- % sudo make install
+    % perl Makefile.PL
+    % make
+    % make test
+    % sudo make install
 
 TEST FAILURES
 -------------

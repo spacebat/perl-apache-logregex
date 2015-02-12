@@ -71,8 +71,6 @@ sub parse {
     die __PACKAGE__ . '->parse() takes 1 argument' unless @_ == 2;
     die __PACKAGE__ . '->parse() argument 1 (LINE) is undefined' unless defined $line;
 
-    chomp $line;
-
     my @temp = $line =~ $self->{_regex};
 
     return unless @temp;
@@ -80,7 +78,36 @@ sub parse {
     my %data;
     @data{ @{ $self->{_regex_fields} } } = @temp;
 
-    return %data;
+    return wantarray ? %data : \%data;
+}
+
+sub generate_parser {
+    my ($self, %args) = @_;
+
+    my $regex = $self->{_regex};
+    my @fields = @{ $self->{_regex_fields} };
+
+    no warnings 'uninitialized';
+
+    if ($args{reuse_record}) {
+        my $record = {};
+        return sub {
+            if (@$record{@fields} = $_[0] =~ $regex) {
+                return $record;
+            } else {
+                return;
+            }
+        }
+    } else {
+        return sub {
+            my $record = {};
+            if (@$record{@fields} = $_[0] =~ $regex) {
+                return $record;
+            } else {
+                return;
+            }
+        }
+    }
 }
 
 sub names {
@@ -131,6 +158,15 @@ Apache::LogRegex - Parse a line from an Apache logfile into a hash
       }
   }
 
+  # or generate a closure for better performance
+
+  my $parser = $lr->generate_parser;
+
+  while ( my $line_from_logfile = <> ) {
+      my $data = $parser->($line_from_logfile) or last;
+      # We have data to process
+  }
+
 =head1 DESCRIPTION
 
 =head2 Overview
@@ -171,6 +207,18 @@ Given a LINE from an Apache logfile it will parse the line and
 return a hash of all the elements of the line indexed by their
 format. If the line cannot be parsed an empty hash will be
 returned.
+
+=item generate_parser( LIST )
+
+Generate and return a closure that, when called with a line, will
+return a hash reference containing the parsed fields, or undef if the
+parse failed. If LIST is supplied, it is interpreted as a flattened
+hash of arguments. One argument is recognised; if C<reuse_record> is a
+true value, then the closure will reuse the same hash reference each
+time it is called. The default is to allocate a new hash for each
+result.
+
+Calling this closure is significantly faster than the C<parse> method.
 
 =item names()
 

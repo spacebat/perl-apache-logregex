@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 46;
+use Test::More;
 
 use_ok('Apache::LogRegex');
 
@@ -15,8 +15,8 @@ my $regex;
     $regex = qr/^(\S*) (\S*) (\S*) (\[[^\]]+\]) $inner_regex (\S*) (\S*) $inner_regex $inner_regex\s*$/;
 }
 my $line1  = '212.74.15.68 - - [23/Jan/2004:11:36:20 +0000] "GET /images/previous.png HTTP/1.1" 200 2607 "http://peterhi.dyndns.org/bandwidth/index.html" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2) Gecko/20021202"';
-my $line2  = '212.74.15.68 - - [23/Jan/2004:11:36:20 +0000] "GET /images/previous.png=\" HTTP/1.1" 200 2607 "http://peterhi.dyndns.org/bandwidth/index.html" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2) Gecko/20021202"';
-my $line3  = '4.224.234.46 - - [20/Jul/2004:13:18:55 -0700] "GET /core/listing/pl_boat_detail.jsp?&units=Feet&checked_boats=1176818&slim=broker&&hosturl=giffordmarine&&ywo=giffordmarine& HTTP/1.1" 200 2888 "http://search.yahoo.com/bin/search?p=\"grady%20white%20306%20bimini\"" "Mozilla/4.0 (compatible; MSIE 6.0; Windows 98; YPC 3.0.3; yplus 4.0.00d)"';
+my $line2  = '212.74.15.68 - - [23/Jan/2004:11:36:20 +0000] "GET /images/previous.png=\" HTTP/1.1" 200 2607 "http://peterhi.dyndns.org/bandwidth/index.html" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2) Gecko/20021202"' . "\n";
+my $line3  = '4.224.234.46 - - [20/Jul/2004:13:18:55 -0700] "GET /core/listing/pl_boat_detail.jsp?&units=Feet&checked_boats=1176818&slim=broker&&hosturl=giffordmarine&&ywo=giffordmarine& HTTP/1.1" 200 2888 "http://search.yahoo.com/bin/search?p=\"grady%20white%20306%20bimini\"" "Mozilla/4.0 (compatible; MSIE 6.0; Windows 98; YPC 3.0.3; yplus 4.0.00d)"' . "\r\n";
 
 ################################################################################
 # Create a new object
@@ -122,3 +122,48 @@ like($@, qr/^Apache::LogRegex->parse\(\) takes 1 argument/, 'Wrong number of arg
 
 eval { %data = $x->parse(undef); };
 like($@, qr/^Apache::LogRegex->parse\(\) argument 1 \(LINE\) is undefined/, 'Wrong number of arguments');
+
+################################################################################
+# Check it can parse a line
+################################################################################
+
+my $parser = $x->generate_parser;
+isa_ok( $parser, 'CODE' );
+
+my $data = $parser->($line1);
+isa_ok( $data, 'HASH');
+
+is($data->{'%h'}, '212.74.15.68', 'Checking the data' );
+is($data->{'%l'}, '-', 'Checking the data' );
+is($data->{'%u'}, '-', 'Checking the data' );
+is($data->{'%t'}, '[23/Jan/2004:11:36:20 +0000]', 'Checking the data' );
+is($data->{'%r'}, 'GET /images/previous.png HTTP/1.1', 'Checking the data' );
+is($data->{'%>s'}, '200', 'Checking the data' );
+is($data->{'%b'}, '2607', 'Checking the data' );
+is($data->{'%{Referer}i'}, 'http://peterhi.dyndns.org/bandwidth/index.html', 'Checking the data' );
+is($data->{'%{User-Agent}i'}, 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2) Gecko/20021202', 'Checking the data' );
+
+my $data2 = $parser->($line2);
+
+ok($data != $data2, 'New record');
+
+$parser = $x->generate_parser(reuse_record => 1);
+isa_ok( $parser, 'CODE' );
+
+$data = $parser->($line1);
+isa_ok( $data, 'HASH');
+
+$data2 = $parser->($line2);
+
+ok($data == $data2, 'Reused record');
+
+$data = $parser->(substr($line1, 0, length($line1)/2));
+ok(! defined($data), "undef for empty string");
+
+$data = $parser->("");
+ok(! defined($data), "undef for empty string");
+
+$data = $parser->(undef);
+ok(! defined($data), "undef for undef");
+
+done_testing;

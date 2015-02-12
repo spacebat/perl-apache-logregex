@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 45;
+use Test::More tests => 46;
 
 use_ok('Apache::LogRegex');
 
@@ -29,7 +29,10 @@ eval { Apache::LogRegex->new(1,2); };
 like( $@, qr/^Apache::LogRegex->new\(\) takes 1 argument/, 'Wrong number of arguments' );
 
 eval { Apache::LogRegex->new(undef); };
-like( $@, qr/^Apache::LogRegex->new\(\) argument 1 \(FORMAT\) is undefined/, 'Undefined argument' );
+like( $@, qr/^Apache::LogRegex->new\(\) argument 1 \(FORMAT\) is false/, 'Undefined argument' );
+
+eval { Apache::LogRegex->new(""); };
+like( $@, qr/^Apache::LogRegex->new\(\) argument 1 \(FORMAT\) is false/, 'False argument' );
 
 my $x = Apache::LogRegex->new($format);
 isa_ok( $x, 'Apache::LogRegex' );

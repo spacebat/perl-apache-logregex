@@ -4,17 +4,17 @@ use strict;
 use warnings;
 
 sub new {
-    my ( $class, $format ) = @_;
+    my ($class, $format) = @_;
 
-    die "Apache::LogRegex->new() takes 1 argument" if scalar(@_) != 2;
-    die "Apache::LogRegex->new() argument 1 (FORMAT) is undefined" if !defined($format);
+    die __PACKAGE__ . '->new() takes 1 argument' unless @_ == 2;
+    die __PACKAGE__ . '->new() argument 1 (FORMAT) is false' unless $format;
 
     my $self = bless {}, $class;
 
     $self->{_format} = $format;
 
     $self->{_regex_string} = '';
-    $self->{_regex_fields} = ();
+    $self->{_regex_fields} = undef;
 
     $self->_parse_format();
 
@@ -24,58 +24,58 @@ sub new {
 sub _parse_format {
     my ($self) = @_;
 
-    chomp( $self->{_format} );
+    chomp $self->{_format};
     $self->{_format} =~ s#[ \t]+# #;
     $self->{_format} =~ s#^ ##;
     $self->{_format} =~ s# $##;
 
     my @regex_elements;
 
-    foreach my $element ( split ( ' ', $self->{_format} ) ) {
-        my $quotes = ( $element =~ m/^\\\"/ ) ? 1 : 0;
+    for my $element (split ' ', $self->{_format}) {
+        my $quotes = $element =~ m/^\\\"/ ? 1 : 0;
 
         if ($quotes) {
             $element =~ s/^\\\"//;
             $element =~ s/\\\"$//;
         }
 
-        push ( @{ $self->{_regex_fields} }, $self->rename_this_name($element) );
+        push @{ $self->{_regex_fields} }, $self->rename_this_name($element);
 
         my $x = '(\S*)';
 
         if ($quotes) {
-            if($element eq '%r' or $element =~ m/{Referer}/ or $element =~ m/{User-Agent}/) {
+            if ($element eq '%r' or $element =~ m/{Referer}/ or $element =~ m/{User-Agent}/) {
                 $x = qr/"([^"\\]*(?:\\.[^"\\]*)*)"/;
             }
             else {
                 $x = '\"([^\"]*)\"';
             }
         }
-        elsif ( $element =~ m/^%.*t$/ ) {
+        elsif ($element =~ m/^%.*t$/) {
             $x = '(\[[^\]]+\])';
         }
-        elsif ( $element eq '%U' ) {
+        elsif ($element eq '%U') {
             $x = '(.+?)';
         }
 
-        push ( @regex_elements, $x );
+        push @regex_elements, $x;
     }
 
-    my $regex = join ( ' ', @regex_elements );
+    my $regex = join ' ', @regex_elements;
     $self->{_regex_string} = qr/^$regex\s*$/;
 }
 
 sub parse {
-    my ( $self, $line ) = @_;
+    my ($self, $line) = @_;
 
-    die "Apache::LogRegex->parse() takes 1 argument" if scalar(@_) != 2;
-    die "Apache::LogRegex->parse() argument 1 (LINE) is undefined" if !defined($line);
+    die __PACKAGE__ . '->parse() takes 1 argument' unless @_ == 2;
+    die __PACKAGE__ . '->parse() argument 1 (LINE) is undefined' unless defined $line;
 
-    chomp($line);
+    chomp $line;
 
     my @temp = $line =~ m/$self->{_regex_string}/;
 
-    return if scalar(@temp) == 0;
+    return unless @temp;
 
     my %data;
     @data{ @{ $self->{_regex_fields} } } = @temp;
@@ -86,21 +86,21 @@ sub parse {
 sub names {
     my ($self) = @_;
 
-    die "Apache::LogRegex->names() takes no argument" if scalar(@_) != 1;
+    die __PACKAGE__ . '->names() takes no argument' unless @_ == 1;
 
-    return ( @{ $self->{_regex_fields} } );
+    return @{ $self->{_regex_fields} };
 }
 
 sub regex {
     my ($self) = @_;
 
-    die "Apache::LogRegex->regex() takes no argument" if scalar(@_) != 1;
+    die __PACKAGE__ . '->regex() takes no argument' unless @_ == 1;
 
     return $self->{_regex_string};
 }
 
 sub rename_this_name {
-    my ( $self, $name ) = @_;
+    my ($self, $name) = @_;
 
     return $name;
 }

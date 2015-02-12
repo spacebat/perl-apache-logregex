@@ -6,8 +6,8 @@ use warnings;
 sub new {
     my ( $class, $format ) = @_;
 
-	die "Apache::LogRegex->new() takes 1 argument" if scalar(@_) != 2;
-	die "Apache::LogRegex->new() argument 1 (FORMAT) is undefined" if !defined($format);
+    die "Apache::LogRegex->new() takes 1 argument" if scalar(@_) != 2;
+    die "Apache::LogRegex->new() argument 1 (FORMAT) is undefined" if !defined($format);
 
     my $self = bless {}, $class;
 
@@ -44,32 +44,32 @@ sub _parse_format {
         my $x = '(\S*)';
 
         if ($quotes) {
-			if($element eq '%r' or $element =~ m/{Referer}/ or $element =~ m/{User-Agent}/) {
-				$x = qr/"([^"\\]*(?:\\.[^"\\]*)*)"/;
-			}
-			else {
-            	$x = '\"([^\"]*)\"';
-			}
+            if($element eq '%r' or $element =~ m/{Referer}/ or $element =~ m/{User-Agent}/) {
+                $x = qr/"([^"\\]*(?:\\.[^"\\]*)*)"/;
+            }
+            else {
+                $x = '\"([^\"]*)\"';
+            }
         }
         elsif ( $element =~ m/^%.*t$/ ) {
             $x = '(\[[^\]]+\])';
         }
-		elsif ( $element eq '%U' ) {
-			$x = '(.+?)';
-		}
+        elsif ( $element eq '%U' ) {
+            $x = '(.+?)';
+        }
 
         push ( @regex_elements, $x );
     }
 
-	my $regex = join ( ' ', @regex_elements );
-	$self->{_regex_string} = qr/^$regex\s*$/;
+    my $regex = join ( ' ', @regex_elements );
+    $self->{_regex_string} = qr/^$regex\s*$/;
 }
 
 sub parse {
     my ( $self, $line ) = @_;
 
-	die "Apache::LogRegex->parse() takes 1 argument" if scalar(@_) != 2;
-	die "Apache::LogRegex->parse() argument 1 (LINE) is undefined" if !defined($line);
+    die "Apache::LogRegex->parse() takes 1 argument" if scalar(@_) != 2;
+    die "Apache::LogRegex->parse() argument 1 (LINE) is undefined" if !defined($line);
 
     chomp($line);
 
@@ -86,7 +86,7 @@ sub parse {
 sub names {
     my ($self) = @_;
 
-	die "Apache::LogRegex->names() takes no argument" if scalar(@_) != 1;
+    die "Apache::LogRegex->names() takes no argument" if scalar(@_) != 1;
 
     return ( @{ $self->{_regex_fields} } );
 }
@@ -94,7 +94,7 @@ sub names {
 sub regex {
     my ($self) = @_;
 
-	die "Apache::LogRegex->regex() takes no argument" if scalar(@_) != 1;
+    die "Apache::LogRegex->regex() takes no argument" if scalar(@_) != 1;
 
     return $self->{_regex_string};
 }

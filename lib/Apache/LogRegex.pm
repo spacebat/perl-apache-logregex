@@ -13,7 +13,7 @@ sub new {
 
     $self->{_format} = $format;
 
-    $self->{_regex_string} = '';
+    $self->{_regex} = '';
     $self->{_regex_fields} = undef;
 
     $self->_parse_format();
@@ -61,8 +61,8 @@ sub _parse_format {
         push @regex_elements, $x;
     }
 
-    my $regex = join ' ', @regex_elements;
-    $self->{_regex_string} = qr/^$regex\s*$/;
+    my $regex_string = join ' ', @regex_elements;
+    $self->{_regex} = qr/^$regex_string\s*$/;
 }
 
 sub parse {
@@ -73,7 +73,7 @@ sub parse {
 
     chomp $line;
 
-    my @temp = $line =~ m/$self->{_regex_string}/;
+    my @temp = $line =~ $self->{_regex};
 
     return unless @temp;
 
@@ -96,7 +96,7 @@ sub regex {
 
     die __PACKAGE__ . '->regex() takes no argument' unless @_ == 1;
 
-    return $self->{_regex_string};
+    return $self->{_regex};
 }
 
 sub rename_this_name {

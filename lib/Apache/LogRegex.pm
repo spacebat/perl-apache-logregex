@@ -31,7 +31,7 @@ sub _parse_format {
 
     my @regex_elements;
 
-    for my $element (split ' ', $self->{_format}) {
+    for my $element (split /\s+/, $self->{_format}) {
         my $quotes = $element =~ m/^\\\"/ ? 1 : 0;
 
         if ($quotes) {
@@ -61,7 +61,7 @@ sub _parse_format {
         push @regex_elements, $x;
     }
 
-    my $regex_string = join ' ', @regex_elements;
+    my $regex_string = join '\s+', @regex_elements;
     $self->{_regex} = qr/^$regex_string\s*$/;
 }
 
@@ -71,14 +71,13 @@ sub parse {
     die __PACKAGE__ . '->parse() takes 1 argument' unless @_ == 2;
     die __PACKAGE__ . '->parse() argument 1 (LINE) is undefined' unless defined $line;
 
-    my @temp = $line =~ $self->{_regex};
+    if (my @temp = $line =~ $self->{_regex}) {
+        my %data;
+        @data{ @{ $self->{_regex_fields} } } = @temp;
+        return wantarray ? %data : \%data;
+    }
 
-    return unless @temp;
-
-    my %data;
-    @data{ @{ $self->{_regex_fields} } } = @temp;
-
-    return wantarray ? %data : \%data;
+    return;
 }
 
 sub generate_parser {
@@ -183,6 +182,10 @@ Should these key names be unusable, as I guess they probably are, then subclass
 and provide an override rename_this_name() method that can rename the keys
 before they are added in the array of field names.
 
+This module supports variable spacing between elements, so if you have
+more than one space between elements in your format or in your log
+file, that should be OK.
+
 =head1 SUBROUTINES/METHODS
 
 =head2 Constructor
@@ -203,10 +206,11 @@ string is the CustomLog string from the httpd.conf file.
 
 =item parse( LINE )
 
-Given a LINE from an Apache logfile it will parse the line and
-return a hash of all the elements of the line indexed by their
-format. If the line cannot be parsed an empty hash will be
-returned.
+Given a LINE from an Apache logfile it will parse the line and return
+all the elements of the line indexed by their corresponding format
+string. In scalar context this takes the form of a hash reference, in
+list context a flat paired list. In either context, if the line cannot
+be parsed a false value will be returned.
 
 =item generate_parser( LIST )
 

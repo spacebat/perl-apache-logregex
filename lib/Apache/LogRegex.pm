@@ -24,44 +24,60 @@ sub new {
 sub _parse_format {
     my ($self) = @_;
 
+    sub quoted_p {
+        $_[0] =~ m/^\\\"/;
+    }
+
     chomp $self->{_format};
     $self->{_format} =~ s#[ \t]+# #;
     $self->{_format} =~ s#^ ##;
     $self->{_format} =~ s# $##;
 
-    my @regex_elements;
+    my @format_elements = split /\s+/, $self->{_format};
+    my $regex_string = '';
 
-    for my $element (split /\s+/, $self->{_format}) {
-        my $quotes = $element =~ m/^\\\"/ ? 1 : 0;
+    for (my $i = 0; $i < @format_elements; $i++) {
+        my $element = $format_elements[$i];
+        my $quoted = quoted_p($element);
 
-        if ($quotes) {
+        if ($quoted) {
             $element =~ s/^\\\"//;
             $element =~ s/\\\"$//;
         }
 
         push @{ $self->{_regex_fields} }, $self->rename_this_name($element);
 
-        my $x = '(\S*)';
+        my $group = '(\S*)';
 
-        if ($quotes) {
+        if ($quoted) {
             if ($element eq '%r' or $element =~ m/{Referer}/ or $element =~ m/{User-Agent}/) {
-                $x = qr/"([^"\\]*(?:\\.[^"\\]*)*)"/;
+                $group = qr/"([^"\\]*(?:\\.[^"\\]*)*)"/;
             }
             else {
-                $x = '\"([^\"]*)\"';
+                $group = '\"([^\"]*)\"';
             }
         }
         elsif ($element =~ m/^%.*t$/) {
-            $x = '(\[[^\]]+\])';
+            $group = '(\[[^\]]+\])';
         }
         elsif ($element eq '%U') {
-            $x = '(.+?)';
+            $group = '(.+?)';
         }
 
-        push @regex_elements, $x;
+        $regex_string .= $group;
+
+        # expect elements separated by whitespace
+        if ($i < $#format_elements) {
+            my $next_element = $format_elements[$i + 1];
+            if ($quoted && quoted_p($next_element)) {
+                # tolerate multiple whitespaces iff both elements are quoted
+                $regex_string .= '\s+';
+            } else {
+                $regex_string .= '\s';
+            }
+        }
     }
 
-    my $regex_string = join '\s+', @regex_elements;
     $self->{_regex} = qr/^$regex_string\s*$/;
 }
 

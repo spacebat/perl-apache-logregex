@@ -186,8 +186,8 @@ Apache::LogRegex - Parse a line from an Apache logfile into a hash
 
 =head2 Overview
 
-Designed as a simple class to parse Apache log files. It will construct
-a regex that will parse the given log file format and can then parse
+A simple class to parse Apache access log files. It will construct a
+regex that will parse the given log file format and can then parse
 lines from the log file line by line returning a hash of each line.
 
 The field names of the hash are derived from the log file format. Thus if
@@ -198,9 +198,9 @@ Should these key names be unusable, as I guess they probably are, then subclass
 and provide an override rename_this_name() method that can rename the keys
 before they are added in the array of field names.
 
-This module supports variable spacing between elements, so if you have
-more than one space between elements in your format or in your log
-file, that should be OK.
+This module supports variable spacing between elements that are
+surrounded by quotes, so if you have more than one space between those
+elements in your format or in your log file, that should be OK.
 
 =head1 SUBROUTINES/METHODS
 
